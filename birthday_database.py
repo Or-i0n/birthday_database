@@ -24,4 +24,5 @@ class Database:
         with open(self.filename, "w") as outfile:
             json.dump(data, outfile)
 
+
 dbs = Database().read()
