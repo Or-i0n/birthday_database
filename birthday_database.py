@@ -18,7 +18,7 @@ class Database:
         except FileNotFoundError as nofile:
             print("File not found! Creating new one.")
             with open(self.filename, "w") as outfile:
-                json.dump([], outfile)
+                json.dump({}, outfile)
 
     def write(self, data):
         """Writes data to database."""
