@@ -6,7 +6,8 @@ TODO:
     functionality.
 
 ADD:
-
+    - Show age while showing results.
+    - Error handling.
 
 ADDED:
     - A way through which one can search with a combination of year + month +
