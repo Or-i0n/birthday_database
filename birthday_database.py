@@ -1,5 +1,16 @@
 # Version: 1.0-20191031
 
+"""
+TODO:
+    - Check if something can be added from pythons datetime library to improve
+    functionality.
+
+ADD:
+    - A way through which one can search with a combination of year + month +
+    date.
+"""
+
+
 import json
 import re
 
@@ -20,7 +31,6 @@ class Database:
             with open(self.filename, "w") as outfile:
                 json.dump({}, outfile)
             return self.read()
-
 
     def write(self, data):
         """Writes data to database."""
@@ -43,10 +53,25 @@ class App(Database):
 
 
     def parse(self, userinput):
-        pattern1 = (r"(-a) ([A-Za-z]+\s?[A-Za-z]*\s?[A-Za-z]*) "
+        """
+        Input Format:
+        - To add something:
+        add James Anderson 1999/11/22
+
+        - To search something:
+        search name James Anderson
+        search year 1999
+        search month 11
+        search day 22
+        search date 1999/11
+        search date 1999/11/22
+        """
+
+        pattern1 = (r"(add) ([A-Za-z]+\s?[A-Za-z]*\s?[A-Za-z]*) "
                     r"(\d{4}/\d{2}/\d{2})")
-        pattern2 = (r"(-y|-m|-d) (\d{2,4})"
-                    r"|([A-Za-z]+\s?[A-Za-z]*\s?[A-Za-z]*)")
+        pattern2 = (r"(search) (name|year|month|day|date)"
+                    r"([A-Za-z]+\s?[A-Za-z]*\s?[A-Za-z]*|"
+                    r"\d{2,4}|\d{4}/\d{2}|\d{4}/\d{2}/\d{2}")
 
         # print(re.match(pattern1, userinput, flags=re.IGNORECASE))
         if match := re.match(pattern1, userinput, flags=re.IGNORECASE):
@@ -63,7 +88,7 @@ class App(Database):
                 print(f"p2-c2 {name=}")
                 return name
 
-    def handle_data(self, userinput):
+    def handle_parsed_data(self, userinput):
         parsed_data = self.parse(userinput)
 
         if len(parsed_data) == 3:
@@ -75,8 +100,19 @@ class App(Database):
 
         if cmd == "-a":
             print(f"Adding {name} {dob} in database.")
-            self.write([name, dob])
-
+            userinfo = [name]
+            dob_sep = dob.split("/")
+            userinfo.extend(dob_sep)
+            self.write(userinfo)
+        elif cmd == "-y":
+            print(f"Searching by year: {query}")
+            found = False
+            for value in self.read().values():
+                if value[1] == query:
+                    print(value[0])
+                    found = True
+            if not found:
+                print(f"No user in database has birthday on {query}!")
 
 
     def handle_userinput(self, userinput):
@@ -84,7 +120,7 @@ class App(Database):
             print("Empty UserInput!")
         else:
             print("Parsing:", userinput)
-            self.handle_data(userinput)
+            self.handle_parsed_data(userinput)
 
 
 # tests = ["", "-a John Doe 1999/01/01", "-add Sudhanshu Mohan Joshi 1954/11/11",
