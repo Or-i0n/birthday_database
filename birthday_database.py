@@ -69,24 +69,20 @@ class App(Database):
 
         pattern1 = (r"(add) ([A-Za-z]+\s?[A-Za-z]*\s?[A-Za-z]*) "
                     r"(\d{4}/\d{2}/\d{2})")
-        pattern2 = (r"(search) (name|year|month|day|date)"
+        pattern2 = (r"(search) (name|year|month|day|date) "
                     r"([A-Za-z]+\s?[A-Za-z]*\s?[A-Za-z]*|"
-                    r"\d{2,4}|\d{4}/\d{2}|\d{4}/\d{2}/\d{2}")
+                    r"\d{4}/\d{2}/\d{2}|\d{4}/\d{2}|\d{2,4})")
 
         # print(re.match(pattern1, userinput, flags=re.IGNORECASE))
         if match := re.match(pattern1, userinput, flags=re.IGNORECASE):
-            # print("p1", match.groups())
-            cmd, name, dob = match.groups()
-            print(f"p1 {cmd=} {name=} {dob=}")
-            return cmd, name, dob
+            print("p1", match.groups())
+            # cmd, name, dob = match.groups()
+            # print(f"p1 {cmd=} {name=} {dob=}")
+            # return cmd, name, dob
         elif match := re.match(pattern2, userinput, flags=re.IGNORECASE):
-            # print("p2", match.groups())
-            if (cmd := match.group(1)) and (query := match.group(2)):
-                print(f"p2-c1 {cmd=} {query=}")
-                return cmd, query
-            elif name := match.group(3):
-                print(f"p2-c2 {name=}")
-                return name
+            print("p2", match.groups())
+            # cmd, subcmd, query = match.groups()
+            # print(f"p1 {cmd=} {subcmd=} {query=}")
 
     def handle_parsed_data(self, userinput):
         parsed_data = self.parse(userinput)
@@ -137,4 +133,4 @@ class App(Database):
 app = App()
 
 while True:
-    app.handle_userinput(input("\nEnter: "))
+    app.parse(input("\nEnter: "))
