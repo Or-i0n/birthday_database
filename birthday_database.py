@@ -1,4 +1,4 @@
-# Version: 1.0-20191031
+# Version: 1.1-20191102
 
 """
 TODO:
@@ -6,6 +6,9 @@ TODO:
     functionality.
 
 ADD:
+
+
+ADDED:
     - A way through which one can search with a combination of year + month +
     date.
 """
@@ -51,7 +54,6 @@ class App(Database):
     def __init__(self):
         super().__init__()
 
-
     def parse(self, userinput):
         """
         Input Format:
@@ -64,58 +66,79 @@ class App(Database):
         search month 11
         search day 22
         search date 1999/11
+        search date /11/22
         search date 1999/11/22
         """
 
         pattern1 = (r"(add) ([A-Za-z]+\s?[A-Za-z]*\s?[A-Za-z]*) "
                     r"(\d{4}/\d{2}/\d{2})")
-        pattern2 = (r"(search) (name|year|month|day|date) "
+        pattern2 = (r"(search) (id|name|year|month|day|date) "
                     r"([A-Za-z]+\s?[A-Za-z]*\s?[A-Za-z]*|"
-                    r"\d{4}/\d{2}/\d{2}|\d{4}/\d{2}|\d{2,4})")
+                    # YYYY/MM/DD       or YYYY/MM  or /MM/DD   or YYYY or D
+                    r"\d{4}/\d{2}/\d{2}|\d{4}/\d{2}|/\d{2}/\d{2}|\d{2,4}|\d)")
 
         # print(re.match(pattern1, userinput, flags=re.IGNORECASE))
-        if match := re.match(pattern1, userinput, flags=re.IGNORECASE):
-            print("p1", match.groups())
-            # cmd, name, dob = match.groups()
-            # print(f"p1 {cmd=} {name=} {dob=}")
-            # return cmd, name, dob
-        elif match := re.match(pattern2, userinput, flags=re.IGNORECASE):
-            print("p2", match.groups())
-            # cmd, subcmd, query = match.groups()
-            # print(f"p1 {cmd=} {subcmd=} {query=}")
+        match1 = re.match(pattern1, userinput, flags=re.IGNORECASE)
+        match2 = re.match(pattern2, userinput, flags=re.IGNORECASE)
+
+        if match1:
+            # print("p1", match.groups())
+            cmd, name, dob = match1.groups()
+            print(f"p1 {cmd=} {name=} {dob=}")
+            return cmd, name, dob
+        elif match2:
+            # print("p2", match.groups())
+            cmd, subcmd, query = match2.groups()
+            print(f"p2 {cmd=} {subcmd=} {query=}")
+            return cmd, subcmd, query
+
+    def show_result(self, subcmd, query):
+        found = False
+        database = self.read()
+        subcmd = subcmd.lower()
+        split_at = 0
+
+        if subcmd == "date":
+            date_split = query.split("/")
+            if date_split[0] == "":
+                split_at = 1
+
+        for userid in database:
+                name, year, month, day = database[userid]
+                tags = {"id": userid, "name": name, "year": year,
+                        "month": month, "day": day}
+                if subcmd != "date":
+                    if tags[subcmd].lower() == query.lower():
+                        print(userid, name, year, month, day)
+                        found = True
+                elif subcmd == "date":
+                    if all(data in database[userid][1:]
+                           for data in date_split[split_at:]):
+                        print(userid, name, year, month, day)
+                        found = True
+        if not found:
+            print(f"No user in database has {subcmd}: {query}")
 
     def handle_parsed_data(self, userinput):
         parsed_data = self.parse(userinput)
-
-        if len(parsed_data) == 3:
+        usercmd = parsed_data[0]
+        if usercmd == "add":
             cmd, name, dob = parsed_data
-        elif len(parsed_data) == 2:
-            cmd, query = parsed_data
-        elif len(parsed_data) == 1:
-            name = parsed_data
-
-        if cmd == "-a":
             print(f"Adding {name} {dob} in database.")
             userinfo = [name]
             dob_sep = dob.split("/")
             userinfo.extend(dob_sep)
             self.write(userinfo)
-        elif cmd == "-y":
-            print(f"Searching by year: {query}")
-            found = False
-            for value in self.read().values():
-                if value[1] == query:
-                    print(value[0])
-                    found = True
-            if not found:
-                print(f"No user in database has birthday on {query}!")
-
+        elif usercmd == "search":
+            cmd, subcmd, query = parsed_data
+            print(f"Searching by {subcmd}: {query}")
+            self.show_result(subcmd, query)
 
     def handle_userinput(self, userinput):
         if not userinput:
             print("Empty UserInput!")
         else:
-            print("Parsing:", userinput)
+            # print("Parsing:", userinput)
             self.handle_parsed_data(userinput)
 
 
@@ -133,4 +156,4 @@ class App(Database):
 app = App()
 
 while True:
-    app.parse(input("\nEnter: "))
+    app.handle_userinput(input("\nEnter: "))
