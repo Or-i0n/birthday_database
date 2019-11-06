@@ -1,4 +1,4 @@
-# Version: 1.1-20191102
+# Version: 1.2-20191106
 
 """
 TODO:
@@ -79,8 +79,8 @@ class App(Database):
                     r"\d{4}/\d{2}/\d{2}|\d{4}/\d{2}|/\d{2}/\d{2}|\d{2,4}|\d)")
 
         # print(re.match(pattern1, userinput, flags=re.IGNORECASE))
-        match1 = re.match(pattern1, userinput, flags=re.IGNORECASE)
-        match2 = re.match(pattern2, userinput, flags=re.IGNORECASE)
+        match1 = re.match(pattern1, userinput)
+        match2 = re.match(pattern2, userinput)
 
         if match1:
             # print("p1", match.groups())
@@ -96,7 +96,7 @@ class App(Database):
     def show_result(self, subcmd, query):
         found = False
         database = self.read()
-        subcmd = subcmd.lower()
+        subcmd = subcmd
         split_at = 0
 
         if subcmd == "date":
@@ -109,7 +109,7 @@ class App(Database):
                 tags = {"id": userid, "name": name, "year": year,
                         "month": month, "day": day}
                 if subcmd != "date":
-                    if tags[subcmd].lower() == query.lower():
+                    if tags[subcmd] == query:
                         print(userid, name, year, month, day)
                         found = True
                 elif subcmd == "date":
@@ -120,7 +120,7 @@ class App(Database):
         if not found:
             print(f"No user in database has {subcmd}: {query}")
 
-    def handle_parsed_data(self, userinput):
+    def handle_and_parse(self, userinput):
         parsed_data = self.parse(userinput)
         usercmd = parsed_data[0]
         if usercmd == "add":
@@ -138,9 +138,51 @@ class App(Database):
     def handle_userinput(self, userinput):
         if not userinput:
             print("Empty UserInput!")
-        else:
-            # print("Parsing:", userinput)
-            self.handle_parsed_data(userinput)
+        elif userinput:
+            userinput_split = userinput.split()
+            print(userinput_split)
+            cmd = userinput_split[0]
+            if cmd not in ("add", "search"):
+                print(f"Command: '{cmd}' is invalid! Enter either 'add' or "
+                      "'search'.")
+            elif cmd == "add" and len(userinput_split) == 1:
+                print("Input Format:-\nTo add something:\nadd James Anderson "
+                      "1999/11/22")
+            elif cmd == "add" and len(userinput_split) > 1:
+                name = userinput_split[1]
+                # print(re.match(r"\d+|\w+\d+|\d+\w+", name))
+                incorrect_name = re.match(r"\d+|\w+\d+|\d+\w+", name)
+                correct_date = re.match(r"add [A-Za-z]+\s?[A-Za-z]*\s?" +
+                                        r"[A-Za-z]* " +
+                                        r"\d{4}/\d{2}/\d{2}", userinput)
+                if incorrect_name:
+                    print("Name can't contain digits.")
+                elif not correct_date:
+                    print("Date format is not correct.")
+                else:
+                    # print("Parsing:", userinput)
+                    self.handle_and_parse(userinput)
+            elif cmd == "search" and len(userinput_split) == 1:
+                print("Input Format:-\n- To search something:\n"
+                      "search name James Anderson\n"
+                      "search year 1999\n"
+                      "search month 11\n"
+                      "search day 22\n"
+                      "search date 1999/11\n"
+                      "search date /11/22\n"
+                      "search date 1999/11/22")
+            elif cmd == "search" and len(userinput_split) > 1:
+                subcmd = userinput_split[1]
+                if subcmd not in ("name", "year", "month", "day", "date"):
+                    print(f"Command: search {subcmd} is not valid! "
+                          f"Enter: search name/year/month/day/date (any one)")
+
+                self.handle_and_parse(userinput)
+
+
+
+
+
 
 
 # tests = ["", "-a John Doe 1999/01/01", "-add Sudhanshu Mohan Joshi 1954/11/11",
