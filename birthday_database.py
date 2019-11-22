@@ -1,4 +1,4 @@
-# Version: 1.2-20191106
+# Version: 1.3-20191122
 
 """
 TODO:
@@ -7,16 +7,18 @@ TODO:
 
 ADD:
     - Show age while showing results.
-    - Error handling.
 
 ADDED:
     - A way through which one can search with a combination of year + month +
     date.
+    - Error handling.
+
 """
 
 import json
 import re
 from http import client
+from datetime import date
 
 
 class Database:
@@ -93,6 +95,11 @@ class App(Database):
             print(f"p2 {cmd=} {subcmd=} {query=}")
             return cmd, subcmd, query
 
+    def calc_age(self, year, month, day):
+        year, month, day = int(year), int(month), int(day)
+        today = date.today()
+        return today.year - year - ((today.month, today.day) < (month, day))
+
     def show_result(self, subcmd, query):
         found = False
         database = self.read()
@@ -109,12 +116,14 @@ class App(Database):
                         "month": month, "day": day}
                 if subcmd != "date":
                     if tags[subcmd] == query:
-                        print(userid, name, year, month, day)
+                        print(f"{userid}- {name} {year}/{month}/{day} "
+                              f"({self.calc_age(year, month, day)})")
                         found = True
                 elif subcmd == "date":
                     if all(data in database[userid][1:]
                            for data in date_split[split_at:]):
-                        print(userid, name, year, month, day)
+                        print(f"{userid}- {name} {year}/{month}/{day} "
+                              f"({self.calc_age(year, month, day)})")
                         found = True
         if not found:
             print(f"No user in database has {subcmd}: {query}")
@@ -153,7 +162,7 @@ class App(Database):
                 incorrect_name = re.match(r"\d+|\w+\d+|\d+\w+", name)
                 correct_date = re.match(r"add [A-Za-z]+\s?[A-Za-z]*\s?" +
                                         r"[A-Za-z]* " +
-                                        r"\d{4}/\d{2}/\d{2}", userinput)
+                                        r"(\d{4}/\d{2}/\d{2})", userinput)
                 if incorrect_name:
                     print("Name can't contain digits.")
                 elif not correct_date:
@@ -162,16 +171,16 @@ class App(Database):
                           "YYYY/MM/DD like 1947/08/15")
                 elif correct_date:
                     # Check year month and day
-                    year, month, day = correct_date.split("/")
+                    year, month, day = correct_date.group(1).split("/")
                     if int(year) > 9999:
                         print("Year can't be greater than 9999!")
                     elif int(month) > 12:
                         print("Month can't be greater than 12!")
                     elif int(day) > 31:
                         print("Day can't be greater than 31!")
-                else:
-                    # print("Parsing:", userinput)
-                    self.handle_and_parse(userinput)
+                    else:
+                        # print("Parsing:", userinput)
+                        self.handle_and_parse(userinput)
             elif cmd == "search" and len(userinput_split) == 1:
                 print("Input Format:-\n- To search something:\n"
                       "search id 3\n"
