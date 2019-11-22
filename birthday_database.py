@@ -157,7 +157,9 @@ class App(Database):
                 if incorrect_name:
                     print("Name can't contain digits.")
                 elif not correct_date:
-                    print("Date format is not correct.")
+                    print("Date format is not correct.\n"
+                          "Correct Date format is:\n"
+                          "YYYY/MM/DD like 1947/08/15")
                 elif correct_date:
                     # Check year month and day
                     year, month, day = correct_date.split("/")
